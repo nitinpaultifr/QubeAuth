@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
+from django.core import serializers
 
 import json
 
@@ -59,10 +60,25 @@ class AuthView(APIView):
 
 class UserDetailsView(APIView):
 	"""
-	API endpoint for retrieving user details of a user.
+	API endpoint for retrieving user details of all users or a
+	single user.
 	"""
 	authentication_classes = (TokenAuthentication,)
 	permission_classes = (IsAuthenticated,)
 
 	def get(self, request, format=None):
-		return Response({'detail': "You are authenticated."})
+		"""
+		GET request returns data for all users.
+		"""
+		userdata = User.objects.all()
+		data = serializers.serialize('json', userdata)
+		return Response(data, content_type='application/json')
+
+	def post(self, request, format=None):
+		"""
+		POST request return data for the requested user.
+		"""
+		username = request.POST['username']
+		userdata = User.objects.filter(username=username)
+		data = serializers.serialize('json', userdata)
+		return Response(data, content_type='application/json')
